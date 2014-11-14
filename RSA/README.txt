@@ -1,0 +1,26 @@
+Adam Sachs
+ajs2255
+
+There are two programs here: one, Makekeys, generates a public and private RSA key for a name given by the command line argument (e.g. typing 'java rsa/Makekeys bob' generates two files, bob.public and bob.private, which hold bob's public and private keys respectively); the second program, Encode, reads a message file and encodes it or decodes it based on a public/private key given to the program (e.g. typing 'java rsa/Encode bob.public < message.txt > code.txt' will encode the text in message.txt and put its output in the file code.txt.
+
+I assume that giving a filename with '.public' at the end in the command line when calling the 'Encode' program means that the user hopes to encode a message using a public key, while giving a filename with the '.private' extension means the user hopes to decode a message using the private key.
+
+A more detailed description of the program is below:
+
+My Makekeys program is pretty straightforward; however, it does call 2 static methods from other classes I write. The first is from the 'Primes.java' class that I wrote. The 'Primes.java' class contains only one static method, 'genPrimes(int top)', which takes an integer 'top' as a parameter and generates all the prime numbers less than 'top' (using the Eratosthenes sieve algorithm) and returns these primes in an array.
+
+The Makekeys program first uses this method to generate all the primes below 128. It then chooses a random 'p' value and a 'q' value from among these primes (they are re-picked if they are below 64, as we are instructed to choose p and q's between 64 and 128). It then computes the 'N' value (which will be the second component of both keys), and then a 'phi' value which is (p-1)*(q-1). 
+
+To choose 'e', which is the first component of the public encryption key, the program generates all prime numbers below 'phi' and chooses the lowest prime. It checks to see if this prime evenly divides 'phi'--if it doesn't, then we know that it is co-prime with 'phi' and is used as our 'e'; if it does, then the next lowest prime is picked and re-checked, until we find a prime number that doesn't evenly divide 'phi' and is thus co-prime with 'phi'. 
+
+To find 'd', the first component of the private encryption key, the program calls the multModInverse(int a, int n) method from the ModInverse class, whose only method is this static method. The multModInverse method takes the integer 'a' and the modulus 'm' and finds the multiplicative modular inverse of it (i.e. if we're looking for 'd', then d*a = 1 mod(n).) It does this using the Extended Euclidean algorithm.
+
+The Makekeys program then takes our 'e' value along with our 'n' value (which refers  to N in general RSA terminology, i.e. p*q) and prints these to the public file, separated by a colon. It then takes our 'd' and 'n' value and prints those to our private file, separated by a colon. The names of our public and private file are simply args[0].public and args[0].private respectively--i.e. the user inputs the prefix of the filenames in the command line.
+
+
+
+For the Encode program, the user must input either a .public or .private file name as the command line argument. If the input ends in .public, I assume that the user wishes to encode a message (which is inputted through the standard input), using the public keys given in the file. If the input ends in .private, I assume the user wants to decode a message that has previously been encoded (and is passed through the standard input), using the private keys given in the file.
+
+I retrieve the public/private keys by reading from the given file and splitting around the colon (and also eliminating the newline characters that might be at the end of the encryption key). I then go into a loop, reading the current line coming from stdin until it reads an empty line (and has reached EOF), and taking the message on each line (which should just be a single integer) and passing that message, the first component of the encryption key (either 'e' or 'd' depending on public or private) and the 'N' value to a static method 'encode' or 'decode', depending on what process we're doing. These static methods are both held in the 'Encryption.java' class that I wrote. The 'encode' and 'decode' methods both take 3 integers (the message and both components of the keys) and simply pass these values to the calcModExp static method in the 'ModExp.java' class that I wrote. The calcModExp method is the only method in this 'ModExp.java' class, and takes 3 integers (b, e, m) and calculates and returns b^e (mod m) efficiently, using the 'right to left binary method' algorithm. This result is passed back to the 'encode' or 'decode' methods from the 'Encryption.java' class, and these methods then pass the value back to the 'Encode.java' class which called them--the 'Encode.java' class simply prints out these values to stout (which are the encoded or decoded message). 
+
+NOTE: When testing my assignment with different message files, it only seemed to work with plain text files, which usually come with '.txt' extension. It could not parse the integers if the file was another format, but I don't think this is a problem, because I am assuming we are supposed to be parsing plain text files.

@@ -1,0 +1,3 @@
+INDEX VERSION 1.126+/Users/Adam/3134/.metadata/.plugins/org.eclipse.jdt.core
+2774693096.index
+200476345.index
